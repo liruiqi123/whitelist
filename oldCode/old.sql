@@ -335,7 +335,43 @@ create table  temp_white_list_stp11_delay_per_overdue_term as SELECT transport_i
     END) AS overdue_term
 FROM
     temp_white_list_stp11
-GROUP BY transport_id
+GROUP BY transport_id;
+
+
+
+
+
+
+
+
+CREATE TABLE temp_white_list_stp11_delay_per_overdue_term_grade AS SELECT a.*,
+(a.sum_delay / a.overdue_term) AS delay_per_overdue_term FROM
+temp_white_list_stp11_delay_per_overdue_term a;
+
+
+CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_before AS
+    SELECT
+        a.*, b.paid_prin
+    FROM
+        (SELECT
+             transport_id, contractamt, settledate
+         FROM
+             temp_white_list_stp10) a,
+        (SELECT
+             transport_id,
+             SUM(CASE
+                 WHEN repayownbdate < FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd') THEN termretprin
+                 ELSE 0
+                 END) AS paid_prin
+         FROM
+             temp_white_list_stp11
+         GROUP BY transport_id) b
+    WHERE
+        a.transport_id = b.transport_id
+
+
+
+
 
 
 

@@ -1953,7 +1953,7 @@
     <inspection_tool class="SqlDropIndexedColumnInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="SqlIdentifierInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="SqlInsertValuesInspection" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="SqlNoDataSourceInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SqlNoDataSourceInspection" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="SqlNullComparisonInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="SqlPostgresqlSelectFromProcedureInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="SqlResolveInspection" enabled="true" level="WARNING" enabled_by_default="true" />
