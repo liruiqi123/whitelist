@@ -367,7 +367,24 @@ CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_before AS
              temp_white_list_stp11
          GROUP BY transport_id) b
     WHERE
-        a.transport_id = b.transport_id
+        a.transport_id = b.transport_id;
+
+
+
+
+CREATE TABLE temp_white_list_stp11_unpaid_prin_rate AS
+    SELECT
+        a.*,
+        CASE
+        WHEN
+            settledate < FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd')
+            AND settledate != ''
+            THEN
+                0
+        ELSE (contractamt - paid_prin) / contractamt
+        END AS unpaid_prin_rate
+    FROM
+        temp_white_list_stp11_unpaid_prin_rate_before a;
 
 
 
