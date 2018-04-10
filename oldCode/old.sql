@@ -1,0 +1,390 @@
+yesterday=`date +%Y%m%d`
+monthday=`date -d '-6 months' +%Y%m%d`
+
+#yesterday='20171026'
+#monthday='20170726'
+
+echo $yesterday
+echo $monthday
+
+hive -e " use kg; 
+
+
+
+
+drop table temp_white_list_stp1; 
+drop table temp_white_list_stp2; 
+drop table temp_white_list_stp3; 
+drop table temp_white_list_stp4; 
+drop table temp_white_list_stp5;
+drop table temp_white_list_stp6;
+drop table temp_white_list_stp7; 
+drop table temp_white_list_stp8; 
+drop table temp_white_list_stp9;
+drop table temp_white_list_stp10;
+
+create table temp_white_list_stp1 as 
+select t1.* from 
+(select
+uuid	,
+source	,
+transport_id	,
+name	,
+user_id	,
+id_number	,
+mobile	,
+mobile2	,
+apply_time	,
+apply_device_id	,
+apply_id	,
+apply_ip	,
+apply_department_name	,
+apply_department_city	,
+apply_latitude	,
+apply_longitude	,
+bank_card_num	,
+bank_name	,
+invite_code	,
+invite_code_data	,
+invite_mobile	,
+is_expand	,
+amortisation	,
+product_type	,
+loan_purpose	,
+loan_type	,
+register_time	,
+register_city	,
+register_detail_address	,
+register_latitude	,
+register_longitude	,
+register_province	,
+register_device_id	,
+register_ip	,
+resident_duration	,
+resident_city	,
+resident_detail_address	,
+resident_district	,
+resident_province	,
+resident_area_code	,
+resident_full_number	,
+resident_number	,
+resident_status	,
+sales_person_name	,
+sfz_edit_count	,
+sfz_error_count	,
+org_name	,
+org_detail_address	,
+org_provice	,
+org_city	,
+org_district	,
+org_area_code	,
+org_full_number	,
+org_number	,
+occupation	,
+salary	,
+credit_card_or_load	,
+domicile_city	,
+domicile_detail_address	,
+domicile_district	,
+domicile_provice	,
+email	,
+house_city	,
+house_detail_address	,
+house_district	,
+house_province	,
+marriage	,
+max_diploma	,
+qq	,
+social_insurance	,
+total_amount	,
+process_status	,
+borrow_amount	,
+borrow_status	,
+contract_id	,
+end_date	,
+decision_desc	,
+decision_inhand_amount	,
+decision_amount	,
+decision_month_return	,
+decision_loan_term	,
+cashier_time	,
+month_return	,
+paid_amount	,
+refuse_code	,
+repay_time	,
+complete_type	,
+return_list	,
+current_overdue_days	,
+current_term_expect_amount	,
+last_term_status	,
+max_overdue_days	,
+owed_contract_amount	,
+owed_contract_corpus	,
+recent_12_terms	,
+recent_24_terms	,
+returned_terms	,
+total_overdue_count	,
+kg.total_overdue_days(return_list) as total_overdue_days,
+contacts
+from mortgagor_$yesterday t3 
+where source = 'ce_clic' 
+and product_type in ('精英贷','新薪贷','新薪宜楼贷','新薪贷(低)' 
+,'新薪贷（银行合作）','精英贷（银行合作）' ,'助业贷','助业宜楼贷','授薪','自雇','车主现金贷')) t1 
+inner join 
+(select id_number,max(apply_time) apply_time from mortgagor_$yesterday t1 
+where source = 'ce_clic' 
+and product_type in ('精英贷','新薪贷','新薪宜楼贷','新薪贷(低)' 
+,'新薪贷（银行合作）','精英贷（银行合作）' ,'助业贷','助业宜楼贷','授薪','自雇','车主现金贷') and cashier_time != '' 
+group by id_number) t2 
+on (t1.id_number = t2.id_number  and t1.apply_time  = t2.apply_time); 
+
+
+create table  temp_white_list_stp2 as  
+select t1.* , t2.busimode,t2.issueamt,t2.customerid,t2.settledate,t2.contractamt,t2.feeflag,account_source from temp_white_list_stp1 t1 
+inner join  
+(select tt1.applyid,tt1.busimode,tt1.issueamt,tt1.customerid,tt1.settledate,tt1.contractamt,tt1.feeflag,
+case when tt1.busimode = '03' and  tt1.Movflag = '0' then '0'
+when tt1.busimode = '01' then '1'
+when tt1.busimode = '02' then '2'
+when tt1.busimode = '03' and  tt1.Movflag = '1' then '3'
+when tt1.busimode = '07' then '4'
+when tt1.busimode = '08' and tt1.bankid = '0316' then '5'
+when tt1.busimode = '10' then '8'
+when tt1.busimode = '08' and tt1.channecode in ('1','2') and tt1.bankid = '0530' then '9'
+when tt1.busimode = '03' and tt1.trustcompno = '181' then '10'
+when tt1.busimode = '03' and tt1.trustcompno = '1'  then '11'
+when tt1.busimode = '08' and tt1.bankid = '0530' and tt1.channecode = '107' then '12'
+else ''  end   as account_source
+from whitelist_xhx_lnscontractinfo_part tt1
+inner join 
+( select max(sysmoddate) dt ,applyid from whitelist_xhx_lnscontractinfo_part group by applyid ) tt2
+on (tt1.applyid = tt2.applyid and tt1.sysmoddate = tt2.dt)
+) t2 
+on (t1.apply_id = t2.applyid);
+
+
+create table temp_white_list_stp3 as  
+select t3.transport_id,t3.has_car,t4.house_status,t3.birthday,t3.credit_level,t3.id_number,t3.house_condition,t3.max_diploma from ( 
+select t1.mortgagor_id,t1.transport_id,t2.credit_level, 
+t1.has_car,t1.birthday ,t1.id_number,t1.house_condition,t1.max_diploma
+from whitelist_clic_tc_mortgagor_data t1 
+inner join (
+select 
+t1.transport_id ,t1.credit_level
+from 
+(select * from whitelist_clic_tc_credit_grade_part 
+where credit_level_version = '3_shouxin') t1 
+inner  join 
+(select max(credit_grade_id) credit_grade_id,transport_id from whitelist_clic_tc_credit_grade_part 
+where credit_level_version = '3_shouxin'
+group by transport_id ) t2 
+on (t1.transport_id = t2.transport_id  and t1.credit_grade_id = t2.credit_grade_id)
+) t2 
+on (t1.transport_id = t2.transport_id and t1.mortgagor_type = '0') ) t3  
+inner join  
+whitelist_clic_tc_mortgagor_data t4 
+on (t3.mortgagor_id= t4.mortgagor_id and t4.mortgagor_type = '0'); 
+
+
+create table  temp_white_list_stp4  
+as select t2.birthday,t1.*,t2.house_status,t2.has_car,t2.credit_level,t2.house_condition,t2.max_diploma as max_diploma2
+from  
+temp_white_list_stp2 t1 
+inner join  
+temp_white_list_stp3 t2 
+on (t1.transport_id = t2.transport_id and t1.id_number = t2.id_number); 
+
+create table temp_white_list_stp5 as 
+select t1.* from temp_white_list_stp4 t1
+left join 
+(select distinct id_number
+from mortgagor_$yesterday 
+where loan_type = '循环贷' 
+and product_type in ('精英贷','新薪贷','新薪宜楼贷','新薪贷(低)' 
+,'新薪贷（银行合作）','精英贷（银行合作）' ,'助业贷','精英贷（农贷）','助业宜楼贷','授薪','自雇','车主现金贷')
+and replace(substr(apply_time,1,10),'-', '')  >= '$monthday'
+and process_status like '%拒%') t2
+on (t1.id_number = t2.id_number)
+where t2.id_number  is null;
+
+create table temp_white_list_stp6 
+as 
+select sum(case when borrow_status like '%结清%'
+then 0 else  nvl(current_expect_prepayamt(return_list),0) end) as prepay,id_number
+from mortgagor_$yesterday 
+where source = 'ce_clic' 
+and product_type in ('精英贷','新薪贷','新薪宜楼贷','新薪贷(低)' 
+,'新薪贷（银行合作）','精英贷（银行合作）' ,'助业贷','助业宜楼贷','授薪','自雇','车主现金贷')
+and return_list is not null
+group by id_number;
+
+
+create table temp_white_list_stp7 as 
+select t1.*,t2.prepay
+from 
+temp_white_list_stp5  t1
+left join
+temp_white_list_stp6 t2
+on (t1.id_number  = t2.id_number ); "
+
+hadoop fs -mv /user/yisou/jiajincao/white_list_in /user/yisou/jiajincao/white_list_in_${yesterday}
+
+hive -e " 
+use kg;
+
+CREATE TABLE temp_white_list_stp8 as
+SELECT t1.*, t2.smp_office_id
+FROM temp_white_list_stp7 t1
+LEFT JOIN 
+(select applyid,smp_office_id from  sellmanager_tsm_apply_smp_department_external_part) t2 
+ON t1.apply_id = t2.applyid ;
+
+
+create table temp_white_list_stp9 as
+SELECT t1.*
+FROM temp_white_list_stp8 t1
+    LEFT JOIN (SELECT kg.decode(sfz_id, 'yisou') AS id_number
+        FROM blacklist_$yesterday
+        WHERE sfz_id IS NOT NULL
+        group by sfz_id
+        ) t2 ON t1.id_number = t2.id_number
+WHERE t2.id_number IS NULL;
+
+create table temp_white_list_stp10 as
+SELECT t1.*
+FROM temp_white_list_stp9 t1
+where 1=1 
+and length(mobile) = 11
+and mobile like '1%';
+
+insert overwrite directory '/user/yisou/jiajincao/white_list_in' 
+select  distinct 
+birthday	,
+uuid	,
+source	,
+transport_id	,
+name	,
+user_id	,
+temp_white_list_stp10.id_number	,
+mobile	,
+mobile2	,
+apply_time	,
+apply_device_id	,
+apply_id	,
+apply_ip	,
+apply_department_name	,
+apply_department_city	,
+apply_latitude	,
+apply_longitude	,
+bank_card_num	,
+bank_name	,
+invite_code	,
+invite_code_data	,
+invite_mobile	,
+is_expand	,
+amortisation	,
+product_type	,
+loan_purpose	,
+loan_type	,
+register_time	,
+register_city	,
+register_detail_address	,
+register_latitude	,
+register_longitude	,
+register_province	,
+register_device_id	,
+register_ip	,
+resident_duration	,
+resident_city	,
+resident_detail_address	,
+resident_district	,
+resident_province	,
+resident_area_code	,
+resident_full_number	,
+resident_number	,
+resident_status	,
+sales_person_name	,
+sfz_edit_count	,
+sfz_error_count	,
+org_name	,
+org_detail_address	,
+org_provice	,
+org_city	,
+org_district	,
+org_area_code	,
+org_full_number	,
+org_number	,
+occupation	,
+salary	,
+credit_card_or_load	,
+domicile_city	,
+domicile_detail_address	,
+domicile_district	,
+domicile_provice	,
+email	,
+house_city	,
+house_detail_address	,
+house_district	,
+house_province	,
+marriage	,
+max_diploma	,
+qq	,
+social_insurance	,
+total_amount	,
+process_status	,
+borrow_amount	,
+borrow_status	,
+customerid ,
+contract_id	,
+end_date	,
+decision_desc	,
+smp_office_id   ,
+decision_inhand_amount	,
+decision_amount	,
+decision_month_return	,
+decision_loan_term	,
+cashier_time	,
+month_return	,
+paid_amount	,
+refuse_code	,
+repay_time	,
+complete_type	,
+return_list	,
+current_overdue_days	,
+current_term_expect_amount	,
+last_term_status	,
+max_overdue_days	,
+owed_contract_amount	,
+owed_contract_corpus	,
+recent_12_terms	,
+recent_24_terms	,
+returned_terms	,
+total_overdue_count	,
+total_overdue_days	,
+contacts	,
+account_source	,
+issueamt	,
+house_status	,
+has_car	,
+credit_level	,
+prepay, settledate,feeflag,'000' from 
+temp_white_list_stp10
+left  join 
+(select distinct id_number  from mortgagor_$yesterday where source like '%jhjj%'
+and  process_status not like '%已结清%'
+union all
+select distinct id_number from  mortgagor_$yesterday where source like '%jhjj%'
+and  total_overdue_days > 0 ) tt2
+on (temp_white_list_stp10.id_number = tt2.id_number)
+where tt2.id_number is null;
+
+
+"
+
+version=`date +%Y%m%d%H%M`
+
+
+mv white_list_out.csv pre_white_list_out_"$version".csv
+mv white_list_fail.txt pre_white_list_fail_"$version".txt
+
+#/home/yisou/anaconda2/bin/python2.7 white_list.py
