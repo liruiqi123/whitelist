@@ -381,10 +381,14 @@ CREATE TABLE temp_white_list_stp11_unpaid_prin_rate AS
             AND settledate != ''
             THEN
                 0
-        ELSE (contractamt - paid_prin) / contractamt
+        ELSE ( (contractamt - paid_prin)*10000 / contractamt)
         END AS unpaid_prin_rate
     FROM
-        temp_white_list_stp11_unpaid_prin_rate_before a;
+        temp_white_list_stp11_unpaid_prin_rate_before a
+
+
+
+
 
 
 
