@@ -311,13 +311,13 @@ CREATE TABLE temp_white_list_stp11_last_max_diploma AS SELECT transport_id,
 create table  temp_white_list_stp11_delay_per_overdue_term as SELECT transport_id,
     SUM(CASE
         WHEN
-            (acctflag = '1' AND delayflag != '2'
+            (acctflag = '1' AND delayflag != 'true'
                 AND repayownbdate < FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd'))
                 OR repayownbdate >= FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd')
         THEN
             0
         WHEN
-            acctflag = '1' AND delayflag = '2'
+            acctflag = '1' AND delayflag = 'true'
                 AND termretdate < FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd')
                 AND repayownbdate < FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd')
         THEN
@@ -326,7 +326,7 @@ create table  temp_white_list_stp11_delay_per_overdue_term as SELECT transport_i
     END) AS sum_delay,
     SUM(CASE
         WHEN
-            (acctflag = '1' AND delayflag != '2'
+            (acctflag = '1' AND delayflag != 'true'
                 AND repayownbdate < FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd'))
                 OR repayownbdate >= FROM_UNIXTIME(UNIX_TIMESTAMP(), 'yyyy-MM-dd')
         THEN
