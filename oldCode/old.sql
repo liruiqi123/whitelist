@@ -287,7 +287,7 @@ CREATE TABLE temp_white_list_stp11_last_house_condition AS SELECT transport_id,h
         WHEN '5' THEN 19
         ELSE 0
     END AS last_house_condition FROM
-    temp_white_list_stp11;
+    temp_white_list_stp10;
 
 
 CREATE TABLE temp_white_list_stp11_last_max_diploma AS SELECT transport_id,
@@ -304,7 +304,7 @@ CREATE TABLE temp_white_list_stp11_last_max_diploma AS SELECT transport_id,
         WHEN '8' THEN 52
         ELSE 0
     END AS last_max_diploma FROM
-    temp_white_list_stp11;
+    temp_white_list_stp10;
 
 
 
@@ -396,7 +396,7 @@ CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_2 AS
             AND settledate != ''
             THEN
                 0
-        ELSE ( (contractamt - paid_prin)*10000 / contractamt)
+        ELSE ( (contractamt - paid_prin) / contractamt)
         END AS unpaid_prin_rate
     FROM
       temp_white_list_stp11_unpaid_prin_rate_1 a;
@@ -418,13 +418,21 @@ temp_white_list_stp11_unpaid_prin_rate_2  a;
 
 
 
+CREATE  TABLE  temp_white_list_stp12_score_1 AS
+select transport_id,last_house_condition,'last_house_condition' as flag from temp_white_list_stp11_last_house_condition
+union all
+select transport_id,last_max_diploma,'last_max_diploma' as flag from temp_white_list_stp11_last_max_diploma
+union all
+select transport_id,delay_per_overdue_term_score,'delay_per_overdue_term_score' as flag  from temp_white_list_stp11_delay_per_overdue_term_3
+union all
+select transport_id,unpaid_prin_rate_score ,'unpaid_prin_rate_score' as flag from temp_white_list_stp11_unpaid_prin_rate_3;
 
 
 
-
-
-
-
+CREATE  TABLE  temp_white_list_stp12_score_2 AS
+select transport_id,sum(last_house_condition) AS score
+from temp_white_list_stp12_score_1
+group by transport_id;
 
 
 
