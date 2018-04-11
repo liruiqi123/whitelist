@@ -403,6 +403,7 @@ CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_2 AS
 
 
 
+
 CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_3 AS SELECT a.*,
 CASE
 WHEN a.unpaid_prin_rate< 0.001  THEN 32
