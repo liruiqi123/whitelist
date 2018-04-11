@@ -308,7 +308,7 @@ CREATE TABLE temp_white_list_stp11_last_max_diploma AS SELECT transport_id,
 
 
 
-create table  temp_white_list_stp11_delay_per_overdue_term as SELECT transport_id,
+create table  temp_white_list_stp11_delay_per_overdue_term_1 as SELECT transport_id,
     SUM(CASE
         WHEN
             (acctflag = '1' AND delayflag != 'true'
@@ -344,9 +344,24 @@ GROUP BY transport_id;
 
 
 
-CREATE TABLE temp_white_list_stp11_delay_per_overdue_term_grade AS SELECT a.*,
+CREATE TABLE temp_white_list_stp11_delay_per_overdue_term_2 AS SELECT a.*,
 (a.sum_delay / a.overdue_term) AS delay_per_overdue_term FROM
-temp_white_list_stp11_delay_per_overdue_term a;
+temp_white_list_stp11_delay_per_overdue_term_1 a;
+
+
+CREATE TABLE temp_white_list_stp11_delay_per_overdue_term_3 AS SELECT a.*,
+CASE
+WHEN a.delay_per_overdue_term< 1.001  THEN 36
+WHEN a.delay_per_overdue_term is NULL THEN 36
+WHEN a.delay_per_overdue_term>=1.001  and  a.delay_per_overdue_term< 2 THEN 26
+WHEN a.delay_per_overdue_term>=2 THEN 20
+ELSE 0
+END AS delay_per_overdue_term_score FROM
+temp_white_list_stp11_delay_per_overdue_term_2  a;
+
+
+
+
 
 
 CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_before AS
