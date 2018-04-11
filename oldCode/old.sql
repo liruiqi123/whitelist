@@ -364,7 +364,7 @@ temp_white_list_stp11_delay_per_overdue_term_2  a;
 
 
 
-CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_before AS
+CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_1 AS
     SELECT
         a.*, b.paid_prin
     FROM
@@ -387,7 +387,7 @@ CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_before AS
 
 
 
-CREATE TABLE temp_white_list_stp11_unpaid_prin_rate AS
+CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_2 AS
     SELECT
         a.*,
         CASE
@@ -399,7 +399,20 @@ CREATE TABLE temp_white_list_stp11_unpaid_prin_rate AS
         ELSE ( (contractamt - paid_prin)*10000 / contractamt)
         END AS unpaid_prin_rate
     FROM
-        temp_white_list_stp11_unpaid_prin_rate_before a
+      temp_white_list_stp11_unpaid_prin_rate_1 a;
+
+
+
+CREATE TABLE temp_white_list_stp11_unpaid_prin_rate_3 AS SELECT a.*,
+CASE
+WHEN a.unpaid_prin_rate< 0.001  THEN 32
+WHEN a.unpaid_prin_rate is NULL THEN 32
+WHEN a.unpaid_prin_rate>=0.001  and  a.unpaid_prin_rate< 0.25 THEN 52
+WHEN a.unpaid_prin_rate< 0.5   and  a.unpaid_prin_rate>=0.25 THEN 34
+WHEN a.unpaid_prin_rate>=0.5 THEN 17
+ELSE 0
+END AS unpaid_prin_rate_score FROM
+temp_white_list_stp11_unpaid_prin_rate_2  a;
 
 
 
