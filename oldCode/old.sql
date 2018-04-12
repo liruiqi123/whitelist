@@ -25,6 +25,19 @@ drop table temp_white_list_stp10;
 drop table temp_white_list_stp11;
 
 
+drop table temp_white_list_stp11;
+drop table temp_white_list_stp11_last_house_condition;
+drop table temp_white_list_stp11_last_max_diploma;
+drop table temp_white_list_stp11_delay_per_overdue_term_1;
+drop table temp_white_list_stp11_delay_per_overdue_term_2;
+drop table temp_white_list_stp11_delay_per_overdue_term_3;
+drop table temp_white_list_stp11_unpaid_prin_rate_1;
+drop table temp_white_list_stp11_unpaid_prin_rate_2;
+drop table temp_white_list_stp11_unpaid_prin_rate_3;
+drop table temp_white_list_stp12_score_1;
+drop table temp_white_list_stp12_score_2;
+
+
 create table temp_white_list_stp1 as
 select t1.* from
 (select
@@ -436,6 +449,46 @@ group by transport_id;
 
 
 
+CREATE TABLE temp_white_list_stp12_score_3 AS SELECT a.*,
+CASE
+WHEN a.score< 85  THEN 20
+WHEN a.score>=85 and  a.score < 90 THEN 19
+WHEN a.score>=90 and  a.score < 95 THEN 18
+WHEN a.score>=95 and  a.score < 100 THEN 17
+WHEN a.score>=100 and  a.score < 105 THEN 16
+WHEN a.score>=105 and  a.score < 110 THEN 15
+WHEN a.score>=110 and  a.score < 115 THEN 14
+WHEN a.score>=115 and  a.score < 120 THEN 13
+WHEN a.score>=120 and  a.score < 125 THEN 12
+WHEN a.score>=125 and  a.score < 130 THEN 11
+WHEN a.score>=130 and  a.score < 135 THEN 10
+WHEN a.score>=135 and  a.score < 140 THEN 9
+WHEN a.score>=140 and  a.score < 145 THEN 8
+WHEN a.score>=145 and  a.score < 150 THEN 7
+WHEN a.score>=150 and  a.score < 155 THEN 6
+WHEN a.score>=155 and  a.score < 160 THEN 5
+WHEN a.score>=160 and  a.score < 165 THEN 4
+WHEN a.score>=165 and  a.score < 170 THEN 3
+WHEN a.score>=170 and  a.score < 175 THEN 2
+WHEN a.score>=175  THEN 1
+ELSE 0
+END AS level FROM
+temp_white_list_stp12_score_2  a;
+
+
+
+
+
+CREATE TABLE temp_white_list_stp12 AS SELECT a.*, b.score, b.level FROM
+    temp_white_list_stp10 a
+    LEFT JOIN
+    temp_white_list_stp12_score_3 b ON a.transport_id = b.transport_id;
+
+
+
+
+
+
 
 insert overwrite directory '/user/yisou/jiajincao/white_list_in'
 select  distinct
@@ -445,7 +498,7 @@ source	,
 transport_id	,
 name	,
 user_id	,
-temp_white_list_stp10.id_number	,
+temp_white_list_stp12.id_number	,
 mobile	,
 mobile2	,
 apply_time	,
@@ -547,15 +600,15 @@ issueamt	,
 house_status	,
 has_car	,
 credit_level	,
-prepay, settledate,feeflag,'000' from
-temp_white_list_stp10
+prepay, settledate,feeflag,score,level  from
+temp_white_list_stp12
 left  join
 (select distinct id_number  from mortgagor_$yesterday where source like '%jhjj%'
 and  process_status not like '%已结清%'
 union all
 select distinct id_number from  mortgagor_$yesterday where source like '%jhjj%'
 and  total_overdue_days > 0 ) tt2
-on (temp_white_list_stp10.id_number = tt2.id_number)
+on (temp_white_list_stp12.id_number = tt2.id_number)
 where tt2.id_number is null;
 
 
